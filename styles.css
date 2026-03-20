@@ -270,6 +270,38 @@ button:hover {
     }
 }
 
+.button-group {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 20px;
+}
+
+.request-ride-btn {
+    background: #48bb78;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 24px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.request-ride-btn:hover {
+    background: #38a169;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(72, 187, 120, 0.3);
+}
+
+.request-ride-btn:disabled {
+    background: #cbd5e0;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
 .location-section {
     background: white;
     padding: 20px;
@@ -359,5 +391,9 @@ button:hover {
     .location-options {
         flex-direction: column;
         gap: 10px;
+    }
+    
+    .button-group {
+        flex-direction: column;
     }
 }
