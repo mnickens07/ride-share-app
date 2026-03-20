@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ride Share App</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-car"></i> Ride Share App</h1>
+            <nav>
+                <button class="nav-btn active" data-view="user">User Portal</button>
+                <button class="nav-btn" data-view="volunteer">Volunteer Portal</button>
+            </nav>
+        </header>
+
+        <main>
+            <!-- User Portal -->
+            <section id="user-portal" class="portal active">
+                <div class="form-section">
+                    <h2>User Information</h2>
+                    <form id="user-form">
+                        <div class="form-group">
+                            <label for="user-name">Name</label>
+                            <input type="text" id="user-name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="user-email">Email</label>
+                            <input type="email" id="user-email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="user-phone">Phone Number</label>
+                            <input type="tel" id="user-phone" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="user-address">Pickup Address</label>
+                            <input type="text" id="user-address" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="destination">Destination Address</label>
+                            <input type="text" id="destination" placeholder="Where do you want to go?" required>
+                        </div>
+                        <button type="submit">Save User Info</button>
+                        <button type="button" id="edit-user" style="display: none;">Edit User Info</button>
+                        <button type="button" id="cancel-edit" style="display: none;">Cancel</button>
+                    </form>
+                </div>
+
+                <div class="form-section">
+                    <h2>Additional Riders</h2>
+                    <form id="riders-form">
+                        <div id="riders-list">
+                            <div class="rider-item">
+                                <div class="form-group">
+                                    <label>Name</label>
+                                    <input type="text" class="rider-name" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Email</label>
+                                    <input type="email" class="rider-email" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Phone</label>
+                                    <input type="tel" class="rider-phone" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Pickup Address</label>
+                                    <input type="text" class="rider-address" required>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" id="add-rider">Add Another Rider</button>
+                        <button type="submit">Request Ride</button>
+                    </form>
+                </div>
+
+                <div class="status-section">
+                    <h2>Ride Status</h2>
+                    <div id="ride-status">
+                        <p>No ride requested yet</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Volunteer Portal -->
+            <section id="volunteer-portal" class="portal">
+                <div class="form-section">
+                    <h2>Volunteer Registration</h2>
+                    <form id="volunteer-form">
+                        <div class="form-group">
+                            <label for="volunteer-name">Name</label>
+                            <input type="text" id="volunteer-name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="volunteer-email">Email</label>
+                            <input type="email" id="volunteer-email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="volunteer-phone">Phone Number</label>
+                            <input type="tel" id="volunteer-phone" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="volunteer-capacity">Max Riders</label>
+                            <input type="number" id="volunteer-capacity" min="1" max="10" value="4" required>
+                        </div>
+                        
+                        <div class="location-section">
+                            <h3>Starting Location</h3>
+                            <div class="location-options">
+                                <div class="form-group">
+                                    <label>
+                                        <input type="radio" name="location-type" value="current" checked> Use Current Location
+                                    </label>
+                                </div>
+                                <div class="form-group">
+                                    <label>
+                                        <input type="radio" name="location-type" value="manual"> Enter Address Manually
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group" id="manual-address-group" style="display: none;">
+                                <label for="volunteer-address">Starting Address</label>
+                                <input type="text" id="volunteer-address" placeholder="Enter your starting address">
+                            </div>
+                            
+                            <div class="form-group" id="current-location-display">
+                                <button type="button" id="get-location">Get Current Location</button>
+                                <div id="location-status"></div>
+                            </div>
+                        </div>
+                        
+                        <button type="submit">Register as Volunteer</button>
+                    </form>
+                </div>
+
+                <div class="dashboard-section">
+                    <h2>Available Ride Requests</h2>
+                    <div id="ride-requests">
+                        <p>No ride requests available</p>
+                    </div>
+                </div>
+
+                <div class="route-section">
+                    <h2>Route Information</h2>
+                    <div id="route-info">
+                        <p>No route selected</p>
+                    </div>
+                    <div id="map-container">
+                        <div id="map"></div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
