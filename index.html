@@ -5,21 +5,99 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ride Share App</title>
     <link rel="stylesheet" href="styles.css">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1><i class="fas fa-car"></i> Ride Share App</h1>
-            <nav>
-                <button class="nav-btn active" data-view="user">User Portal</button>
-                <button class="nav-btn" data-view="volunteer">Volunteer Portal</button>
-            </nav>
-        </header>
+    <div class="app-container">
+        <!-- Authentication Section -->
+        <section id="auth-portal" class="portal active">
+            <div class="auth-container">
+                <h1><i class="fas fa-car"></i> Ride Share</h1>
+                
+                <!-- Login Form -->
+                <div id="login-form" class="auth-form">
+                    <h2>Login</h2>
+                    <form id="login-form-element">
+                        <div class="form-group">
+                            <label for="login-email">Email</label>
+                            <input type="email" id="login-email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="login-password">Password</label>
+                            <input type="password" id="login-password" required>
+                        </div>
+                        <button type="submit">Login</button>
+                    </form>
+                    <p class="auth-switch">
+                        Don't have an account? <a href="#" id="show-signup">Sign up</a>
+                    </p>
+                </div>
 
-        <main>
+                <!-- Signup Form -->
+                <div id="signup-form" class="auth-form" style="display: none;">
+                    <h2>Create Account</h2>
+                    <form id="signup-form-element">
+                        <div class="form-group">
+                            <label for="signup-name">Full Name</label>
+                            <input type="text" id="signup-name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="signup-email">Email</label>
+                            <input type="email" id="signup-email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="signup-phone">Phone Number</label>
+                            <input type="tel" id="signup-phone" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="signup-password">Password</label>
+                            <input type="password" id="signup-password" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="signup-confirm-password">Confirm Password</label>
+                            <input type="password" id="signup-confirm-password" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="user-type">Account Type</label>
+                            <select id="user-type" required>
+                                <option value="">Select account type</option>
+                                <option value="rider">Rider</option>
+                                <option value="volunteer">Volunteer Driver</option>
+                            </select>
+                        </div>
+                        <button type="submit">Create Account</button>
+                    </form>
+                    <p class="auth-switch">
+                        Already have an account? <a href="#" id="show-login">Login</a>
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main App Section (shown after login) -->
+        <section id="main-app" class="portal" style="display: none;">
+            <!-- Navigation -->
+            <nav class="nav-bar">
+                <div class="nav-brand">
+                    <i class="fas fa-car"></i>
+                    <span>Ride Share</span>
+                </div>
+                <div class="nav-links">
+                    <button class="nav-btn active" data-view="user">User Portal</button>
+                    <button class="nav-btn" data-view="volunteer">Volunteer Portal</button>
+                    <button class="nav-btn" id="logout-btn">Logout</button>
+                </div>
+            </nav>
+
             <!-- User Portal -->
             <section id="user-portal" class="portal active">
+                <div class="portal-header">
+                    <h2>User Portal</h2>
+                    <div class="user-info">
+                        <span id="user-welcome">Welcome, User!</span>
+                    </div>
+                </div>
+
                 <div class="form-section">
                     <h2>User Information</h2>
                     <form id="user-form">
@@ -89,8 +167,15 @@
 
             <!-- Volunteer Portal -->
             <section id="volunteer-portal" class="portal">
+                <div class="portal-header">
+                    <h2>Volunteer Portal</h2>
+                    <div class="user-info">
+                        <span id="volunteer-welcome">Welcome, Volunteer!</span>
+                    </div>
+                </div>
+
                 <div class="form-section">
-                    <h2>Volunteer Registration</h2>
+                    <h2>Volunteer Information</h2>
                     <form id="volunteer-form">
                         <div class="form-group">
                             <label for="volunteer-name">Name</label>
@@ -105,30 +190,24 @@
                             <input type="tel" id="volunteer-phone" required>
                         </div>
                         <div class="form-group">
-                            <label for="volunteer-capacity">Max Riders</label>
-                            <input type="number" id="volunteer-capacity" min="1" max="10" value="4" required>
+                            <label for="volunteer-capacity">Vehicle Capacity</label>
+                            <input type="number" id="volunteer-capacity" min="1" max="8" required>
                         </div>
                         
                         <div class="location-section">
                             <h3>Starting Location</h3>
                             <div class="location-options">
                                 <div class="form-group">
-                                    <label>
-                                        <input type="radio" name="location-type" value="current" checked> Use Current Location
-                                    </label>
+                                    <label><input type="radio" name="location-type" value="current" checked> Use Current Location</label>
                                 </div>
                                 <div class="form-group">
-                                    <label>
-                                        <input type="radio" name="location-type" value="manual"> Enter Address Manually
-                                    </label>
+                                    <label><input type="radio" name="location-type" value="manual"> Enter Address Manually</label>
                                 </div>
                             </div>
-                            
                             <div class="form-group" id="manual-address-group" style="display: none;">
                                 <label for="volunteer-address">Starting Address</label>
                                 <input type="text" id="volunteer-address" placeholder="Enter your starting address">
                             </div>
-                            
                             <div class="form-group" id="current-location-display">
                                 <button type="button" id="get-location">Get Current Location</button>
                                 <div id="location-status"></div>
@@ -149,14 +228,18 @@
                 <div class="route-section">
                     <h2>Route Information</h2>
                     <div id="route-info">
-                        <p>No route selected</p>
+                        <p>No route calculated yet</p>
                     </div>
-                    <div id="map-container">
-                        <div id="map"></div>
+                    <div id="map">
+                        <div>
+                            <i class="fas fa-map-marked-alt" style="font-size: 48px; margin-bottom: 10px;"></i>
+                            <p>Map View</p>
+                            <p>Route will appear here</p>
+                        </div>
                     </div>
                 </div>
             </section>
-        </main>
+        </section>
     </div>
 
     <script src="script.js"></script>

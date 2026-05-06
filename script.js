@@ -5,15 +5,18 @@ class RideShareApp {
         this.rideRequests = [];
         this.currentUser = null;
         this.currentVolunteer = null;
+        this.loggedInUser = null;
+        this.userType = null;
         this.init();
     }
 
     init() {
         this.loadData();
         this.setupEventListeners();
-        this.updateUI();
+        this.checkAuthStatus();
     }
 
+    // Data Management
     loadData() {
         const savedUsers = localStorage.getItem('rideShareUsers');
         const savedVolunteers = localStorage.getItem('rideShareVolunteers');
@@ -30,9 +33,57 @@ class RideShareApp {
         localStorage.setItem('rideShareRequests', JSON.stringify(this.rideRequests));
     }
 
+    // Authentication System
+    checkAuthStatus() {
+        const loggedInUser = localStorage.getItem('loggedInUser');
+        const userType = localStorage.getItem('userType');
+        
+        if (loggedInUser && userType) {
+            this.loggedInUser = JSON.parse(loggedInUser);
+            this.userType = userType;
+            this.showMainApp();
+        } else {
+            this.showAuthPortal();
+        }
+    }
+
     setupEventListeners() {
+        // Authentication forms
+        document.getElementById('login-form-element').addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.handleLogin();
+        });
+
+        document.getElementById('signup-form-element').addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.handleSignup();
+        });
+
+        // Auth switch links
+        document.getElementById('show-signup').addEventListener('click', (e) => {
+            e.preventDefault();
+            this.showSignupForm();
+        });
+
+        document.getElementById('show-login').addEventListener('click', (e) => {
+            e.preventDefault();
+            this.showLoginForm();
+        });
+
+        // Logout button
+        document.getElementById('logout-btn').addEventListener('click', () => {
+            this.handleLogout();
+        });
+
+        // Navigation (only setup if user is logged in)
+        if (this.loggedInUser) {
+            this.setupMainAppEventListeners();
+        }
+    }
+
+    setupMainAppEventListeners() {
         // Navigation
-        document.querySelectorAll('.nav-btn').forEach(btn => {
+        document.querySelectorAll('.nav-btn[data-view]').forEach(btn => {
             btn.addEventListener('click', (e) => this.switchView(e.target.dataset.view));
         });
 
@@ -73,8 +124,139 @@ class RideShareApp {
         document.getElementById('get-location').addEventListener('click', () => this.getCurrentLocation());
     }
 
+    // Authentication UI Management
+    showAuthPortal() {
+        document.getElementById('auth-portal').style.display = 'block';
+        document.getElementById('main-app').style.display = 'none';
+        this.showLoginForm();
+    }
+
+    showMainApp() {
+        document.getElementById('auth-portal').style.display = 'none';
+        document.getElementById('main-app').style.display = 'block';
+        this.setupMainAppEventListeners();
+        this.updateUI();
+        
+        // Show appropriate portal based on user type
+        if (this.userType === 'volunteer') {
+            this.switchView('volunteer');
+        } else {
+            this.switchView('user');
+        }
+    }
+
+    showLoginForm() {
+        document.getElementById('login-form').style.display = 'block';
+        document.getElementById('signup-form').style.display = 'none';
+    }
+
+    showSignupForm() {
+        document.getElementById('login-form').style.display = 'none';
+        document.getElementById('signup-form').style.display = 'block';
+    }
+
+    // Authentication Logic
+    handleLogin() {
+        const email = document.getElementById('login-email').value;
+        const password = document.getElementById('login-password').value;
+
+        // Find user in database
+        const user = this.users.find(u => u.email === email && u.password === password);
+        const volunteer = this.volunteers.find(v => v.email === email && v.password === password);
+
+        if (user || volunteer) {
+            const loggedInUser = user || volunteer;
+            const userType = user ? 'rider' : 'volunteer';
+            
+            this.loggedInUser = loggedInUser;
+            this.userType = userType;
+            
+            // Save session
+            localStorage.setItem('loggedInUser', JSON.stringify(loggedInUser));
+            localStorage.setItem('userType', userType);
+            
+            this.showNotification('Login successful!');
+            this.showMainApp();
+            
+            // Clear form
+            document.getElementById('login-form-element').reset();
+        } else {
+            this.showNotification('Invalid email or password', 'error');
+        }
+    }
+
+    handleSignup() {
+        const name = document.getElementById('signup-name').value;
+        const email = document.getElementById('signup-email').value;
+        const phone = document.getElementById('signup-phone').value;
+        const password = document.getElementById('signup-password').value;
+        const confirmPassword = document.getElementById('signup-confirm-password').value;
+        const userType = document.getElementById('user-type').value;
+
+        // Validation
+        if (password !== confirmPassword) {
+            this.showNotification('Passwords do not match', 'error');
+            return;
+        }
+
+        if (password.length < 6) {
+            this.showNotification('Password must be at least 6 characters', 'error');
+            return;
+        }
+
+        // Check if user already exists
+        const existingUser = this.users.find(u => u.email === email);
+        const existingVolunteer = this.volunteers.find(v => v.email === email);
+
+        if (existingUser || existingVolunteer) {
+            this.showNotification('An account with this email already exists', 'error');
+            return;
+        }
+
+        // Create new user
+        const newUser = {
+            id: Date.now(),
+            name: name,
+            email: email,
+            phone: phone,
+            password: password, // In production, this should be hashed
+            address: '',
+            createdAt: new Date().toISOString()
+        };
+
+        if (userType === 'volunteer') {
+            newUser.capacity = 4;
+            newUser.location = null;
+            this.volunteers.push(newUser);
+        } else {
+            this.users.push(newUser);
+        }
+
+        this.saveData();
+        this.showNotification('Account created successfully! Please login.');
+        
+        // Clear form and show login
+        document.getElementById('signup-form-element').reset();
+        this.showLoginForm();
+    }
+
+    handleLogout() {
+        localStorage.removeItem('loggedInUser');
+        localStorage.removeItem('userType');
+        this.loggedInUser = null;
+        this.userType = null;
+        this.currentUser = null;
+        this.currentVolunteer = null;
+        
+        this.showNotification('Logged out successfully');
+        this.showAuthPortal();
+    }
+
+    // Main App Functions
     switchView(view) {
-        document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+        if (!this.loggedInUser) return;
+
+        document.querySelectorAll('.nav-btn[data-view]').forEach(btn => btn.classList.remove('active'));
         document.querySelectorAll('.portal').forEach(portal => portal.classList.remove('active'));
 
         document.querySelector(`[data-view="${view}"]`).classList.add('active');
@@ -86,35 +268,39 @@ class RideShareApp {
     }
 
     saveUserInfo() {
+        if (!this.loggedInUser || this.userType !== 'rider') return;
+
         const userData = {
+            ...this.loggedInUser,
             name: document.getElementById('user-name').value,
             email: document.getElementById('user-email').value,
             phone: document.getElementById('user-phone').value,
-            address: document.getElementById('user-address').value,
-            id: Date.now()
+            address: document.getElementById('user-address').value
         };
 
+        // Update in database
+        const userIndex = this.users.findIndex(u => u.id === this.loggedInUser.id);
+        if (userIndex !== -1) {
+            this.users[userIndex] = userData;
+        }
+
+        this.loggedInUser = userData;
         this.currentUser = userData;
-        this.users.push(userData);
         this.saveData();
-        this.showNotification('User information saved successfully!');
+        localStorage.setItem('loggedInUser', JSON.stringify(userData));
         
-        // Update UI to show edit mode
+        this.showNotification('User information updated successfully!');
         this.showUserEditMode();
     }
 
     enableUserEdit() {
-        if (!this.currentUser) {
-            this.showNotification('No user information to edit!', 'error');
-            return;
-        }
+        if (!this.loggedInUser) return;
 
         // Populate form with current user data
-        document.getElementById('user-name').value = this.currentUser.name;
-        document.getElementById('user-email').value = this.currentUser.email;
-        document.getElementById('user-phone').value = this.currentUser.phone;
-        document.getElementById('user-address').value = this.currentUser.address;
-        // Don't populate destination as it's ride-specific, not user-specific
+        document.getElementById('user-name').value = this.loggedInUser.name || '';
+        document.getElementById('user-email').value = this.loggedInUser.email || '';
+        document.getElementById('user-phone').value = this.loggedInUser.phone || '';
+        document.getElementById('user-address').value = this.loggedInUser.address || '';
 
         // Show edit buttons, hide save button
         document.querySelector('#user-form button[type="submit"]').style.display = 'none';
@@ -130,10 +316,9 @@ class RideShareApp {
             updateBtn.style.background = '#48bb78';
             document.getElementById('user-form').appendChild(updateBtn);
 
-            // Add event listener for update
             updateBtn.addEventListener('click', (e) => {
                 e.preventDefault();
-                this.updateUserInfo();
+                this.saveUserInfo();
             });
         }
 
@@ -149,42 +334,12 @@ class RideShareApp {
         this.showUserEditMode();
         
         // Reset form to current user data
-        if (this.currentUser) {
-            document.getElementById('user-name').value = this.currentUser.name;
-            document.getElementById('user-email').value = this.currentUser.email;
-            document.getElementById('user-phone').value = this.currentUser.phone;
-            document.getElementById('user-address').value = this.currentUser.address;
-        } else {
-            document.getElementById('user-form').reset();
+        if (this.loggedInUser) {
+            document.getElementById('user-name').value = this.loggedInUser.name || '';
+            document.getElementById('user-email').value = this.loggedInUser.email || '';
+            document.getElementById('user-phone').value = this.loggedInUser.phone || '';
+            document.getElementById('user-address').value = this.loggedInUser.address || '';
         }
-    }
-
-    updateUserInfo() {
-        if (!this.currentUser) {
-            this.showNotification('No user information to update!', 'error');
-            return;
-        }
-
-        // Update user data
-        const updatedData = {
-            ...this.currentUser,
-            name: document.getElementById('user-name').value,
-            email: document.getElementById('user-email').value,
-            phone: document.getElementById('user-phone').value,
-            address: document.getElementById('user-address').value
-        };
-
-        // Update in users array
-        const userIndex = this.users.findIndex(u => u.id === this.currentUser.id);
-        if (userIndex !== -1) {
-            this.users[userIndex] = updatedData;
-        }
-
-        this.currentUser = updatedData;
-        this.saveData();
-        this.showNotification('User information updated successfully!');
-        
-        this.showUserEditMode();
     }
 
     showUserEditMode() {
@@ -200,7 +355,7 @@ class RideShareApp {
         }
 
         // Make form fields readonly if user exists (except destination)
-        if (this.currentUser) {
+        if (this.loggedInUser) {
             document.querySelectorAll('#user-form input').forEach(input => {
                 if (input.id !== 'destination') {
                     input.setAttribute('readonly', true);
@@ -236,19 +391,23 @@ class RideShareApp {
     }
 
     requestRideFromMain() {
-        // This function handles ride requests from the main User Information section
         this.requestRide();
     }
 
     requestRide() {
-        if (!this.currentUser) {
-            this.showNotification('Please save your information first!', 'error');
+        if (!this.loggedInUser || this.userType !== 'rider') {
+            this.showNotification('Please login as a rider to request rides', 'error');
             return;
         }
 
         const destination = document.getElementById('destination').value;
         if (!destination) {
             this.showNotification('Please enter a destination address!', 'error');
+            return;
+        }
+
+        if (!this.loggedInUser.address) {
+            this.showNotification('Please update your pickup address first!', 'error');
             return;
         }
 
@@ -264,7 +423,7 @@ class RideShareApp {
 
         const rideRequest = {
             id: Date.now(),
-            user: this.currentUser,
+            user: this.loggedInUser,
             riders: riders,
             destination: destination,
             status: 'pending',
@@ -319,6 +478,11 @@ class RideShareApp {
     }
 
     registerVolunteer() {
+        if (!this.loggedInUser || this.userType !== 'volunteer') {
+            this.showNotification('Please login as a volunteer to register', 'error');
+            return;
+        }
+
         const locationType = document.querySelector('input[name="location-type"]:checked').value;
         let locationData = null;
 
@@ -346,17 +510,25 @@ class RideShareApp {
         }
 
         const volunteerData = {
-            name: document.getElementById('volunteer-name').value,
-            email: document.getElementById('volunteer-email').value,
-            phone: document.getElementById('volunteer-phone').value,
-            capacity: parseInt(document.getElementById('volunteer-capacity').value),
-            id: Date.now(),
+            ...this.loggedInUser,
+            name: document.getElementById('volunteer-name').value || this.loggedInUser.name,
+            email: document.getElementById('volunteer-email').value || this.loggedInUser.email,
+            phone: document.getElementById('volunteer-phone').value || this.loggedInUser.phone,
+            capacity: parseInt(document.getElementById('volunteer-capacity').value) || 4,
             location: locationData
         };
 
+        // Update in database
+        const volunteerIndex = this.volunteers.findIndex(v => v.id === this.loggedInUser.id);
+        if (volunteerIndex !== -1) {
+            this.volunteers[volunteerIndex] = volunteerData;
+        }
+
         this.currentVolunteer = volunteerData;
-        this.volunteers.push(volunteerData);
+        this.loggedInUser = volunteerData;
         this.saveData();
+        localStorage.setItem('loggedInUser', JSON.stringify(volunteerData));
+        
         this.showNotification('Volunteer registration successful!');
         
         // Clear form
@@ -508,7 +680,6 @@ class RideShareApp {
                 volunteerStart = this.currentVolunteer.location.address;
                 volunteerStartDisplay = this.currentVolunteer.location.address;
             } else if (this.currentVolunteer.location.type === 'current' && this.currentVolunteer.location.coordinates) {
-                // For coordinates, we need to format them properly for maps
                 const coords = this.currentVolunteer.location.coordinates;
                 volunteerStart = `${coords.lat},${coords.lng}`;
                 volunteerStartDisplay = `Current Location (${coords.lat.toFixed(6)}, ${coords.lng.toFixed(6)})`;
@@ -646,9 +817,6 @@ class RideShareApp {
 
     checkProximity(volunteerLocation, request) {
         // Simplified proximity check
-        // In a real app, you would calculate actual distance using Haversine formula
-        // and use geocoding to convert addresses to coordinates
-        
         const mockDistance = Math.random() * 10; // Mock distance in km
         
         if (mockDistance < 1) {
@@ -668,17 +836,52 @@ class RideShareApp {
     }
 
     updateUI() {
-        // Update any UI elements that need initial data
-        if (this.rideRequests.length > 0 && this.currentUser) {
-            const lastRequest = this.rideRequests.find(req => req.user.id === this.currentUser.id);
-            if (lastRequest) {
-                this.updateRideStatus(lastRequest);
-            }
+        if (!this.loggedInUser) return;
+
+        // Update welcome messages
+        const userWelcome = document.getElementById('user-welcome');
+        const volunteerWelcome = document.getElementById('volunteer-welcome');
+        
+        if (userWelcome) {
+            userWelcome.textContent = `Welcome, ${this.loggedInUser.name}!`;
+        }
+        if (volunteerWelcome) {
+            volunteerWelcome.textContent = `Welcome, ${this.loggedInUser.name}!`;
         }
 
-        // Show user edit mode if user exists
-        if (this.currentUser) {
+        // Populate user form if logged in as rider
+        if (this.userType === 'rider') {
+            document.getElementById('user-name').value = this.loggedInUser.name || '';
+            document.getElementById('user-email').value = this.loggedInUser.email || '';
+            document.getElementById('user-phone').value = this.loggedInUser.phone || '';
+            document.getElementById('user-address').value = this.loggedInUser.address || '';
+            
+            this.currentUser = this.loggedInUser;
             this.showUserEditMode();
+        }
+
+        // Populate volunteer form if logged in as volunteer
+        if (this.userType === 'volunteer') {
+            document.getElementById('volunteer-name').value = this.loggedInUser.name || '';
+            document.getElementById('volunteer-email').value = this.loggedInUser.email || '';
+            document.getElementById('volunteer-phone').value = this.loggedInUser.phone || '';
+            document.getElementById('volunteer-capacity').value = this.loggedInUser.capacity || 4;
+            
+            this.currentVolunteer = this.loggedInUser;
+        }
+
+        // Update ride requests if volunteer
+        if (this.userType === 'volunteer') {
+            this.updateRideRequests();
+        }
+
+        // Show ride status if rider has requests
+        if (this.userType === 'rider' && this.rideRequests.length > 0) {
+            const userRequests = this.rideRequests.filter(req => req.user.id === this.loggedInUser.id);
+            if (userRequests.length > 0) {
+                const lastRequest = userRequests[userRequests.length - 1];
+                this.updateRideStatus(lastRequest);
+            }
         }
     }
 }
