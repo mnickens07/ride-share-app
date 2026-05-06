@@ -495,10 +495,10 @@ class RideShareApp {
             updateBtn.remove();
         }
 
-        // Make form fields readonly if user exists (except destination)
+        // Make form fields readonly if user exists (except destination and user-address)
         if (this.loggedInUser) {
             document.querySelectorAll('#user-form input').forEach(input => {
-                if (input.id !== 'destination') {
+                if (input.id !== 'destination' && input.id !== 'user-address') {
                     input.setAttribute('readonly', true);
                 }
             });
