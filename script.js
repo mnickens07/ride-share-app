@@ -7,6 +7,7 @@ class RideShareApp {
         this.currentVolunteer = null;
         this.loggedInUser = null;
         this.userType = null;
+        this.passwordResetCodes = new Map(); // Store reset codes with expiry
         this.init();
     }
 
@@ -59,6 +60,16 @@ class RideShareApp {
             this.handleSignup();
         });
 
+        document.getElementById('forgot-password-form-element').addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.handleForgotPassword();
+        });
+
+        document.getElementById('reset-password-form-element').addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.handleResetPassword();
+        });
+
         // Auth switch links
         document.getElementById('show-signup').addEventListener('click', (e) => {
             e.preventDefault();
@@ -66,6 +77,21 @@ class RideShareApp {
         });
 
         document.getElementById('show-login').addEventListener('click', (e) => {
+            e.preventDefault();
+            this.showLoginForm();
+        });
+
+        document.getElementById('show-forgot-password').addEventListener('click', (e) => {
+            e.preventDefault();
+            this.showForgotPasswordForm();
+        });
+
+        document.getElementById('show-login-from-forgot').addEventListener('click', (e) => {
+            e.preventDefault();
+            this.showLoginForm();
+        });
+
+        document.getElementById('show-login-from-reset').addEventListener('click', (e) => {
             e.preventDefault();
             this.showLoginForm();
         });
@@ -148,11 +174,29 @@ class RideShareApp {
     showLoginForm() {
         document.getElementById('login-form').style.display = 'block';
         document.getElementById('signup-form').style.display = 'none';
+        document.getElementById('forgot-password-form').style.display = 'none';
+        document.getElementById('reset-password-form').style.display = 'none';
     }
 
     showSignupForm() {
         document.getElementById('login-form').style.display = 'none';
         document.getElementById('signup-form').style.display = 'block';
+        document.getElementById('forgot-password-form').style.display = 'none';
+        document.getElementById('reset-password-form').style.display = 'none';
+    }
+
+    showForgotPasswordForm() {
+        document.getElementById('login-form').style.display = 'none';
+        document.getElementById('signup-form').style.display = 'none';
+        document.getElementById('forgot-password-form').style.display = 'block';
+        document.getElementById('reset-password-form').style.display = 'none';
+    }
+
+    showResetPasswordForm() {
+        document.getElementById('login-form').style.display = 'none';
+        document.getElementById('signup-form').style.display = 'none';
+        document.getElementById('forgot-password-form').style.display = 'none';
+        document.getElementById('reset-password-form').style.display = 'block';
     }
 
     // Authentication Logic
@@ -238,6 +282,103 @@ class RideShareApp {
         // Clear form and show login
         document.getElementById('signup-form-element').reset();
         this.showLoginForm();
+    }
+
+    // Password Recovery Logic
+    handleForgotPassword() {
+        const email = document.getElementById('forgot-email').value;
+
+        // Find user in database
+        const user = this.users.find(u => u.email === email);
+        const volunteer = this.volunteers.find(v => v.email === email);
+
+        if (!user && !volunteer) {
+            this.showNotification('No account found with this email address', 'error');
+            return;
+        }
+
+        // Generate 6-digit verification code
+        const resetCode = this.generateResetCode();
+        const expiryTime = Date.now() + (15 * 60 * 1000); // 15 minutes expiry
+
+        // Store reset code
+        this.passwordResetCodes.set(email, {
+            code: resetCode,
+            expiry: expiryTime,
+            userType: user ? 'rider' : 'volunteer'
+        });
+
+        // In a real application, this would send an email
+        // For demo purposes, we'll show the code in a notification
+        this.showNotification(`Password reset code sent to ${email}. For demo: Code is ${resetCode}`, 'success');
+        
+        // Store the email for the reset form
+        this.pendingResetEmail = email;
+        
+        // Clear form and show reset form
+        document.getElementById('forgot-password-form-element').reset();
+        this.showResetPasswordForm();
+    }
+
+    handleResetPassword() {
+        const code = document.getElementById('reset-code').value;
+        const newPassword = document.getElementById('reset-password').value;
+        const confirmPassword = document.getElementById('reset-confirm-password').value;
+
+        // Validation
+        if (newPassword !== confirmPassword) {
+            this.showNotification('Passwords do not match', 'error');
+            return;
+        }
+
+        if (newPassword.length < 6) {
+            this.showNotification('Password must be at least 6 characters', 'error');
+            return;
+        }
+
+        // Check reset code
+        const resetData = this.passwordResetCodes.get(this.pendingResetEmail);
+        
+        if (!resetData) {
+            this.showNotification('Invalid or expired reset code', 'error');
+            return;
+        }
+
+        if (Date.now() > resetData.expiry) {
+            this.showNotification('Reset code has expired. Please request a new one.', 'error');
+            this.passwordResetCodes.delete(this.pendingResetEmail);
+            this.showForgotPasswordForm();
+            return;
+        }
+
+        if (code !== resetData.code) {
+            this.showNotification('Invalid verification code', 'error');
+            return;
+        }
+
+        // Update password in database
+        const userArray = resetData.userType === 'rider' ? this.users : this.volunteers;
+        const userIndex = userArray.findIndex(u => u.email === this.pendingResetEmail);
+        
+        if (userIndex !== -1) {
+            userArray[userIndex].password = newPassword;
+            this.saveData();
+        }
+
+        // Clean up
+        this.passwordResetCodes.delete(this.pendingResetEmail);
+        this.pendingResetEmail = null;
+
+        this.showNotification('Password reset successfully! Please login with your new password.');
+        
+        // Clear form and show login
+        document.getElementById('reset-password-form-element').reset();
+        this.showLoginForm();
+    }
+
+    generateResetCode() {
+        // Generate 6-digit random code
+        return Math.floor(100000 + Math.random() * 900000).toString();
     }
 
     handleLogout() {
