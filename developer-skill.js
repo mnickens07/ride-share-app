@@ -375,15 +375,28 @@ class DeveloperSkill {
         };
 
         const reportData = JSON.stringify(report, null, 2);
-        const blob = new Blob([reportData], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `implementation-report-${Date.now()}.json`;
-        a.click();
-        URL.revokeObjectURL(url);
         
-        console.log('\n📄 Implementation report saved to file\n');
+        if (typeof Blob !== 'undefined' && typeof URL !== 'undefined') {
+            // Browser environment
+            const blob = new Blob([reportData], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `implementation-report-${Date.now()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            console.log('\n📄 Implementation report saved to file\n');
+        } else {
+            // Node.js environment
+            const fs = require('fs');
+            const path = require('path');
+            const filename = `implementation-report-${Date.now()}.json`;
+            const filepath = path.join(__dirname, filename);
+            
+            fs.writeFileSync(filepath, reportData);
+            console.log(`\n📄 Implementation report saved to ${filepath}\n`);
+        }
     }
 
     /**
@@ -467,5 +480,6 @@ class DeveloperSkill {
 
 // Export for use in other modules
 if (typeof module !== 'undefined' && module.exports) {
+    module.exports.DeveloperSkill = DeveloperSkill;
     module.exports = DeveloperSkill;
 }

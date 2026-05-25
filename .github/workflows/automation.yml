@@ -1,0 +1,58 @@
+name: Tester-Developer Automation
+
+on:
+  schedule:
+    # Run every hour
+    - cron: '0 * * * *'
+  workflow_dispatch:
+    inputs:
+      auto_approve:
+        description: 'Auto-approve all changes'
+        required: false
+        default: false
+        type: boolean
+      auto_push:
+        description: 'Auto-push to GitHub'
+        required: false
+        default: false
+        type: boolean
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  run-automation:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+    
+    - name: Install dependencies
+      run: npm install
+    
+    - name: Run automation workflow
+      run: node automation.js --once
+      env:
+        AUTO_APPROVE: ${{ github.event.inputs.auto_approve || false }}
+        AUTO_PUSH: ${{ github.event.inputs.auto_push || false }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Commit and push changes
+      if: success()
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add -A
+        git diff --quiet && git diff --staged --quiet || git commit -m "Automated improvement from tester-developer workflow"
+        git push
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

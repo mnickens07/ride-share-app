@@ -720,19 +720,33 @@ submitRating(rideId, rating, comment) {
      */
     saveTestReport(report) {
         const reportData = JSON.stringify(report, null, 2);
-        const blob = new Blob([reportData], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `test-report-${Date.now()}.json`;
-        a.click();
-        URL.revokeObjectURL(url);
         
-        console.log('📄 Test report saved to file\n');
+        if (typeof Blob !== 'undefined' && typeof URL !== 'undefined') {
+            // Browser environment
+            const blob = new Blob([reportData], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `test-report-${Date.now()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            console.log('📄 Test report saved to file\n');
+        } else {
+            // Node.js environment
+            const fs = require('fs');
+            const path = require('path');
+            const filename = `test-report-${Date.now()}.json`;
+            const filepath = path.join(__dirname, filename);
+            
+            fs.writeFileSync(filepath, reportData);
+            console.log(`📄 Test report saved to ${filepath}\n`);
+        }
     }
 }
 
 // Export for use in other modules
 if (typeof module !== 'undefined' && module.exports) {
+    module.exports.TesterSkill = TesterSkill;
     module.exports = TesterSkill;
 }

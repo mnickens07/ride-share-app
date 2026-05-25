@@ -1,0 +1,22 @@
+{
+  "name": "ride-share-app",
+  "version": "1.0.0",
+  "description": "Ride Share App with Tester and Developer Skills",
+  "main": "automation.js",
+  "scripts": {
+    "start": "node automation.js",
+    "run-once": "node automation.js --once",
+    "config": "node automation.js --config",
+    "test": "node automation.js --once"
+  },
+  "keywords": [
+    "ride-share",
+    "automation",
+    "testing",
+    "github"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {},
+  "devDependencies": {}
+}
