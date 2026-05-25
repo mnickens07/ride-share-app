@@ -17,6 +17,11 @@ async function runSkillWorkflow() {
     // Initialize developer skill
     const developer = new DeveloperSkill();
     
+    // Store developer globally for browser environment
+    if (typeof window !== 'undefined') {
+        window.developer = developer;
+    }
+    
     // Process suggestions
     const implementationResults = await developer.processSuggestions(testResults.suggestions);
     
@@ -52,14 +57,17 @@ async function approveAndPush(developer, changeIndices, commitMessage) {
     return pushResult;
 }
 
+// Global developer instance for browser environment
+let globalDeveloper = null;
+
 // Run the workflow
 if (typeof window !== 'undefined') {
     // Browser environment
     window.runSkillWorkflow = runSkillWorkflow;
     window.approveAndPush = approveAndPush;
     console.log('Skill workflow ready.');
-    console.log('Run: runSkillWorkflow() to start the workflow');
-    console.log('Then: approveAndPush(developer, [0,1,2], "commit message") to approve and push');
+    console.log('Run: const result = await runSkillWorkflow() to start the workflow');
+    console.log('Then: approveAndPush(result.developer, [0,1,2], "commit message") to approve and push');
 } else {
     // Node.js environment
     runSkillWorkflow();
