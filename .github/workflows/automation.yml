@@ -24,6 +24,8 @@ on:
 jobs:
   run-automation:
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     
     steps:
     - name: Checkout code
@@ -54,6 +56,6 @@ jobs:
         git config --local user.name "GitHub Action"
         git add -A
         git diff --quiet && git diff --staged --quiet || git commit -m "Automated improvement from tester-developer workflow"
-        git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+        git push origin main
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
